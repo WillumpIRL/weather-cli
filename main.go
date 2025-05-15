@@ -17,20 +17,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// WeatherData represents the weather information for a city
-type WeatherData struct {
+// weather_data represents the weather information for a city
+type weather_data struct {
 	City        string    `json:"city"`
 	Temperature float64   `json:"temperature"`
 	Humidity    int       `json:"humidity"`
 	Description string    `json:"description"`
-	WindSpeed   float64   `json:"windSpeed"`
-	LastUpdated time.Time `json:"lastUpdated"`
-	LocalTime   time.Time `json:"localTime"`
+	WindSpeed   float64   `json:"wind_speed"`
+	LastUpdated time.Time `json:"last_updated"`
+	LocalTime   time.Time `json:"local_time"`
 	Error       string    `json:"error,omitempty"`
 }
 
-// OpenWeatherResponse represents the API response from OpenWeatherMap
-type OpenWeatherResponse struct {
+// open_weather_response represents the API response from OpenWeatherMap
+type open_weather_response struct {
 	Main struct {
 		Temp     float64 `json:"temp"`
 		Humidity int     `json:"humidity"`
@@ -50,21 +50,21 @@ type OpenWeatherResponse struct {
 }
 
 var (
-	apiKey string
+	api_key string
 )
 
 func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	apiKey = os.Getenv("OPENWEATHER_API_KEY")
-	if apiKey == "" {
+	api_key = os.Getenv("OPENWEATHER_API_KEY")
+	if api_key == "" {
 		log.Fatal("OPENWEATHER_API_KEY is required")
 	}
 }
 
-// capitaliseWords properly capitalises each word in a string
-func capitaliseWords(s string) string {
+// capitalise_words properly capitalises each word in a string
+func capitalise_words(s string) string {
 	words := strings.Fields(s)
 	for i, word := range words {
 		runes := []rune(word)
@@ -79,18 +79,18 @@ func capitaliseWords(s string) string {
 	return strings.Join(words, " ")
 }
 
-func fetchWeather(city string) WeatherData {
+func fetch_weather(city string) weather_data {
 	// Properly capitalise the city name
-	properCity := capitaliseWords(city)
+	proper_city := capitalise_words(city)
 
 	// URL encode the city name to handle spaces and special characters
-	encodedCity := url.QueryEscape(properCity)
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric", encodedCity, apiKey)
+	encoded_city := url.QueryEscape(proper_city)
+	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric", encoded_city, api_key)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return WeatherData{
-			City:  properCity,
+		return weather_data{
+			City:  proper_city,
 			Error: fmt.Sprintf("Error fetching weather: %v", err),
 		}
 	}
@@ -98,43 +98,43 @@ func fetchWeather(city string) WeatherData {
 
 	// Check if the response status is not OK
 	if resp.StatusCode != http.StatusOK {
-		return WeatherData{
-			City:  properCity,
+		return weather_data{
+			City:  proper_city,
 			Error: "City Not Found",
 		}
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return WeatherData{
-			City:  properCity,
+		return weather_data{
+			City:  proper_city,
 			Error: fmt.Sprintf("Error reading response: %v", err),
 		}
 	}
 
-	var weatherResp OpenWeatherResponse
-	if err := json.Unmarshal(body, &weatherResp); err != nil {
-		return WeatherData{
-			City:  properCity,
+	var weather_response open_weather_response
+	if err := json.Unmarshal(body, &weather_response); err != nil {
+		return weather_data{
+			City:  proper_city,
 			Error: fmt.Sprintf("Error parsing response: %v", err),
 		}
 	}
 
 	// Calculate local time using the timezone offset from the API
-	localTime := time.Now().UTC().Add(time.Duration(weatherResp.Timezone) * time.Second)
+	local_time := time.Now().UTC().Add(time.Duration(weather_response.Timezone) * time.Second)
 
-	return WeatherData{
-		City:        properCity,
-		Temperature: weatherResp.Main.Temp,
-		Humidity:    weatherResp.Main.Humidity,
-		Description: weatherResp.Weather[0].Description,
-		WindSpeed:   weatherResp.Wind.Speed,
+	return weather_data{
+		City:        proper_city,
+		Temperature: weather_response.Main.Temp,
+		Humidity:    weather_response.Main.Humidity,
+		Description: weather_response.Weather[0].Description,
+		WindSpeed:   weather_response.Wind.Speed,
 		LastUpdated: time.Now(),
-		LocalTime:   localTime,
+		LocalTime:   local_time,
 	}
 }
 
-func displayWeather(weather WeatherData) {
+func display_weather(weather weather_data) {
 	fmt.Printf("\n=== Weather for %s ===\n", weather.City)
 	if weather.Error != "" {
 		fmt.Printf("Error: %s\n", weather.Error)
@@ -149,7 +149,7 @@ func displayWeather(weather WeatherData) {
 	fmt.Println("=========================")
 }
 
-func getCityInput() string {
+func get_city_input() string {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("\nEnter a city name (or 'q' to quit): ")
 	input, err := reader.ReadString('\n')
@@ -168,7 +168,7 @@ func main() {
 	fmt.Println("=======================================")
 
 	for {
-		city := getCityInput()
+		city := get_city_input()
 		if city == "q" {
 			fmt.Println("\nThank you for using Weather CLI!")
 			break
@@ -178,26 +178,26 @@ func main() {
 		}
 
 		// Create a channel to receive weather data
-		weatherChan := make(chan WeatherData)
+		weather_channel := make(chan weather_data)
 		var wg sync.WaitGroup
 
 		// Launch goroutine for the city
 		wg.Add(1)
 		go func(city string) {
 			defer wg.Done()
-			weather := fetchWeather(city)
-			weatherChan <- weather
+			weather := fetch_weather(city)
+			weather_channel <- weather
 		}(city)
 
 		// Launch a goroutine to close the channel when fetch is complete
 		go func() {
 			wg.Wait()
-			close(weatherChan)
+			close(weather_channel)
 		}()
 
 		// Display weather data as it arrives
-		for weather := range weatherChan {
-			displayWeather(weather)
+		for weather := range weather_channel {
+			display_weather(weather)
 		}
 	}
 

@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"weather-cli/internal/models"
+	"github.com/WillumpIRL/weather-cli/internal/models"
 )
 
 type OpenWeatherMapAPI struct {

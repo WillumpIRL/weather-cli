@@ -63,8 +63,8 @@ func init() {
 	}
 }
 
-// capitalizeWords properly capitalizes each word in a string
-func capitalizeWords(s string) string {
+// capitaliseWords properly capitalises each word in a string
+func capitaliseWords(s string) string {
 	words := strings.Fields(s)
 	for i, word := range words {
 		runes := []rune(word)
@@ -80,8 +80,8 @@ func capitalizeWords(s string) string {
 }
 
 func fetchWeather(city string) WeatherData {
-	// Properly capitalize the city name
-	properCity := capitalizeWords(city)
+	// Properly capitalise the city name
+	properCity := capitaliseWords(city)
 
 	// URL encode the city name to handle spaces and special characters
 	encodedCity := url.QueryEscape(properCity)
@@ -163,8 +163,8 @@ func getCityInput() string {
 func main() {
 	fmt.Println("=======================================")
 	fmt.Println("Weather CLI - Demonstrating Go's Features")
-	fmt.Println("This program demonstrates Go's concurrency features with goroutines and channels")
-	fmt.Println("Type 'q' to quit the program")
+	fmt.Println("This programme demonstrates Go's concurrency features with goroutines and channels")
+	fmt.Println("Type 'q' to quit the programme")
 	fmt.Println("=======================================")
 
 	for {
@@ -211,7 +211,7 @@ func main() {
 	fmt.Println("- Channel-based communication")
 	fmt.Println("\nLimitations:")
 	fmt.Println("- Verbose error handling")
-	fmt.Println("- Manual JSON marshaling")
+	fmt.Println("- Manual JSON marshalling")
 	fmt.Println("- Limited generics usage")
 	fmt.Println("=======================================")
 }
